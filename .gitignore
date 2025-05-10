@@ -153,7 +153,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-
+face-recognition-control-system.code-workspace
 # pytype static type analyzer
 .pytype/
 dataset/
