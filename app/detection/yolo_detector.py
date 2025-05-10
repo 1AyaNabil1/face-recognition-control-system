@@ -11,6 +11,9 @@ class YOLOFaceDetector:
             raise FileNotFoundError(f"YOLO model not found at {model_path}")
         self.model = YOLO(model_path)
         self.confidence = confidence
+        self.fallback_cascade = cv2.CascadeClassifier(
+            cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
+        )
 
     def detect_faces(self, frame):
         results = self.model.predict(source=frame, conf=self.confidence, verbose=False)
@@ -23,6 +26,13 @@ class YOLOFaceDetector:
                     if conf >= self.confidence:
                         x1, y1, x2, y2 = map(int, box.xyxy[0])
                         boxes.append((x1, y1, x2, y2))
+
+        # Fallback to Haar Cascade if YOLO fails
+        if not boxes:
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            faces = self.fallback_cascade.detectMultiScale(gray, 1.1, 4)
+            for x, y, w, h in faces:
+                boxes.append((x, y, x + w, y + h))
 
         return boxes
 
