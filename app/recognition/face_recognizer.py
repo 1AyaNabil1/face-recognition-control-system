@@ -28,6 +28,9 @@ class FaceRecognizer:
 
     def recognize(self, face):
         new_embedding = self.embedder.get_embedding(face)
+        if np.linalg.norm(new_embedding) == 0:
+            return "Unknown", 0.0, []
+
         mean_embeddings = self._get_mean_embeddings()
         if len(mean_embeddings) == 0:
             return "Unknown", 0.0, []
@@ -44,7 +47,6 @@ class FaceRecognizer:
             print(f"  - {label}: {score:.4f}")
 
         best_label, best_score = scores[0]
-
         if best_score >= self.threshold:
             return best_label, best_score, scores[:3]
 
