@@ -202,3 +202,8 @@ insightface
 onnxruntime
 opencv-python
 pillow
+Flask==3.0.2
+flask-cors==4.0.0
+opencv-python==4.11.0.86
+numpy==1.26.4
+onnxruntime==1.21.1

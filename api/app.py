@@ -3,6 +3,7 @@ from flask_cors import CORS
 from api.recognition_service import RecognitionService
 from api.utils import decode_base64_image, encode_image_base64
 from api.health import health_bp
+import os
 
 app = Flask(__name__)
 CORS(app)
@@ -35,4 +36,4 @@ def recognize_face():
 
 if __name__ == "__main__":
     app.register_blueprint(health_bp)
-    app.run(host="0.0.0.0", port=5000, debug=False)
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)), debug=False)
