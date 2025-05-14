@@ -4,15 +4,15 @@ gunicorn
 
 numpy==1.26.4
 opencv-python==4.11.0.86
-onnxruntime==1.14.1  # Downgraded for protobuf compatibility
+onnxruntime==1.14.1
 insightface==0.7.3
 
 tensorflow==2.11.0
-protobuf==3.19.6  # Compatible with TensorFlow 2.11.0
+protobuf==3.19.6
 
 pandas==2.2.3
 requests==2.32.3
 pillow==11.1.0
 scikit-learn==1.6.1
 
-ultralytics==8.3.107  # Only if YOLO is used
+ultralytics==8.3.107
