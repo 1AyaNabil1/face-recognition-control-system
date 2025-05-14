@@ -2,21 +2,17 @@ Flask==3.0.2
 flask-cors==4.0.0
 gunicorn
 
-# Core Dependencies for Face Recognition
 numpy==1.26.4
 opencv-python==4.11.0.86
-onnxruntime==1.21.1
+onnxruntime==1.14.1  # Downgraded for protobuf compatibility
 insightface==0.7.3
 
-# If using TensorFlow models (for embeddings)
-tensorflow==2.11.0  # Ensure runtime.txt forces Python 3.10
+tensorflow==2.11.0
+protobuf==3.19.6  # Compatible with TensorFlow 2.11.0
 
-# Database and Utilities
 pandas==2.2.3
 requests==2.32.3
-protobuf==3.20.3
 pillow==11.1.0
 scikit-learn==1.6.1
 
-# Optional: Only if actually used
-ultralytics==8.3.107  # For YOLO models
+ultralytics==8.3.107  # Only if YOLO is used
