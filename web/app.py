@@ -18,10 +18,14 @@ st.markdown(
 }
 .stButton>button:hover { background-color: #219653; }
 .stError { background-color: #e74c3c; color: white; padding: 10px; border-radius: 5px; }
+.element-container:has(div[data-testid="stFileUploader"]) + div {
+        display: none;
+    }
 </style>
 """,
     unsafe_allow_html=True,
 )
+
 
 API_URL = (
     "https://ayanabil1--face-recognition-system-recognize-face.modal.run/api/recognize"
@@ -73,9 +77,13 @@ st.sidebar.write("Upload an image or add a new person to the system.")
 st.sidebar.write("Developed by: Aya Nabil")
 
 st.title("🔍 Face Recognition Control System")
-uploaded_file = st.file_uploader(
+upload_placeholder = st.empty()
+uploaded_file = upload_placeholder.file_uploader(
     "📂 Upload an Image", type=["jpg", "jpeg", "png"], key="file_uploader"
 )
+
+if uploaded_file:
+    upload_placeholder.empty()  # Clear the uploader section after upload
 
 if uploaded_file:
     img_bytes, img_b64_or_error = process_image(uploaded_file)
