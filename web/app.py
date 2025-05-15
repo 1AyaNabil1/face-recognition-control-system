@@ -10,7 +10,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Use the Modal endpoint URL (update this after deploying on Modal)
+# Use the Modal endpoint URL
 API_URL = "https://ayanabil1--face-recognition-system-recognize-face.modal.run"
 
 uploaded_file = st.file_uploader("📂 Upload an Image", type=["jpg", "jpeg", "png"])
