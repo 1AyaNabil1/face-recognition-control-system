@@ -5,7 +5,7 @@ from PIL import Image
 import io
 from typing import Tuple, Dict, Optional
 
-# Custom styling
+# Custom styling with pastel background
 st.set_page_config(
     page_title="Face Recognition System",
     layout="centered",
@@ -15,7 +15,7 @@ st.markdown(
     """
     <style>
     .stApp {
-        background-color: #f0f2f6;
+        background-color: #d6e4ff;  /* Pastel blue background */
     }
     .sidebar .sidebar-content {
         background-color: #2c3e50;
@@ -45,7 +45,7 @@ st.markdown(
 with st.sidebar:
     st.title("Face Recognition System")
     st.write("Upload an image to recognize faces using our advanced API.")
-    st.write("Developed by: Your Name")
+    st.write("Developed by: Aya Nabil")  # Updated developer name
     st.write(
         "API Endpoint: https://ayanabil1--face-recognition-system-recognize-face.modal.run"
     )
