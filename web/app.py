@@ -3,7 +3,6 @@ import requests
 import base64
 from PIL import Image
 import io
-import os
 
 st.set_page_config(page_title="Face Recognition System", layout="centered")
 st.markdown(
@@ -11,8 +10,8 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Updated with actual Flask endpoint
-API_URL = os.getenv("API_URL", "https://ayanabil1--run-flask.modal.run/api/recognize")
+# Use the Modal endpoint URL (update this after deploying on Modal)
+API_URL = "https://ayanabil1--face-recognition-system-recognize-face.modal.run"
 
 uploaded_file = st.file_uploader("📂 Upload an Image", type=["jpg", "jpeg", "png"])
 
@@ -32,7 +31,7 @@ if uploaded_file is not None:
         with st.spinner("Processing..."):
             try:
                 response = requests.post(API_URL, json={"image": img_b64}, timeout=30)
-                response.raise_for_status()  # Raise exception for non-200 status
+                response.raise_for_status()
             except requests.RequestException as e:
                 st.error(f"Recognition Failed: {str(e)}")
                 st.stop()
