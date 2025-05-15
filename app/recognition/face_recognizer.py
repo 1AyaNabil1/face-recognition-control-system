@@ -1,6 +1,9 @@
 from collections import defaultdict
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
+from app.detection.face_detector import extract_face
+from models.vggface2_model import get_embedding
+from app.database.db_manager import insert_embedding
 
 
 class FaceRecognizer:
@@ -12,6 +15,8 @@ class FaceRecognizer:
     def _get_mean_embeddings(self):
         records = self.database.fetch_all_embeddings()
         grouped = defaultdict(list)
+        for name, emb in records:
+            grouped[name].append(emb)
 
         cleaned = []
         for name, embs in grouped.items():
@@ -51,3 +56,11 @@ class FaceRecognizer:
             return best_label, best_score, scores[:3]
 
         return "Unknown", best_score, scores[:3]
+
+    def add_new_person(self, image, name):
+        face = extract_face(image)
+        if face is None:
+            raise ValueError("No face detected in the provided image.")
+        emb = get_embedding(self.embedder.model, face)
+        insert_embedding(name, emb.tolist(), None)
+        print(f"[+] Added new person '{name}' to the database.")
