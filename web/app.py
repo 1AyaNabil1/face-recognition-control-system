@@ -5,7 +5,7 @@ from PIL import Image
 import io
 from typing import Tuple, Dict, Optional
 
-# Custom styling with pastel background
+# Custom styling with darker pastel background
 st.set_page_config(
     page_title="Face Recognition System",
     layout="centered",
@@ -15,7 +15,7 @@ st.markdown(
     """
     <style>
     .stApp {
-        background-color: #d6e4ff;  /* Pastel blue background */
+        background-color: #b3c9e6;  /* Darker pastel blue background */
     }
     .sidebar .sidebar-content {
         background-color: #2c3e50;
@@ -45,7 +45,7 @@ st.markdown(
 with st.sidebar:
     st.title("Face Recognition System")
     st.write("Upload an image to recognize faces using our advanced API.")
-    st.write("Developed by: Aya Nabil")  # Updated developer name
+    st.write("Developed by: Aya Nabil")
     st.write(
         "API Endpoint: https://ayanabil1--face-recognition-system-recognize-face.modal.run"
     )
@@ -60,12 +60,16 @@ API_URL = "https://ayanabil1--face-recognition-system-recognize-face.modal.run"
 
 
 def process_image(file) -> Tuple[Optional[bytes], Optional[str]]:
-    """Process the uploaded image and return bytes and base64 encoding."""
+    """Process the uploaded image and return bytes and base64 encoding with validation."""
     try:
         img_bytes = file.read()
-        return img_bytes, base64.b64encode(img_bytes).decode("utf-8")
+        # Validate image by attempting to open it with PIL
+        Image.open(io.BytesIO(img_bytes)).verify()  # Verify image integrity
+        Image.open(io.BytesIO(img_bytes))  # Re-open to reset file pointer
+        img_b64 = base64.b64encode(img_bytes).decode("utf-8")
+        return img_bytes, img_b64
     except Exception as e:
-        return None, str(e)
+        return None, f"Invalid image file: {str(e)}"
 
 
 def display_image(img_bytes: bytes, caption: str, width: int = 500):
@@ -97,27 +101,38 @@ def main():
 
     if uploaded_file is not None:
         with st.spinner("Processing image..."):
-            img_bytes, error = process_image(uploaded_file)
-            if error:
-                st.session_state.error = f"Image processing error: {error}"
+            img_bytes, img_b64_or_error = process_image(uploaded_file)
+            if isinstance(img_b64_or_error, str):  # Error case
+                st.session_state.error = img_b64_or_error
             else:
+                img_b64 = img_b64_or_error
                 # Display uploaded image
                 st.subheader("Uploaded Image")
                 display_image(img_bytes, "Uploaded Image")
 
-                # Recognize button
-                if st.button("🚀 Recognize Face"):
-                    with st.spinner("Recognizing faces..."):
-                        result = call_recognition_api(
-                            error or process_image(uploaded_file)[1]
+                # Three buttons
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    if st.button("Image Recognition"):
+                        with st.spinner("Recognizing faces..."):
+                            result = call_recognition_api(img_b64)
+                            if "error" in result:
+                                st.session_state.error = (
+                                    f"Recognition Failed: {result['error']}"
+                                )
+                            else:
+                                st.session_state.recognition_result = result
+                                st.session_state.error = None
+                with col2:
+                    if st.button("Live Recognition"):
+                        st.warning(
+                            "Live recognition is not yet implemented. Requires webcam support."
                         )
-                        if "error" in result:
-                            st.session_state.error = (
-                                f"Recognition Failed: {result['error']}"
-                            )
-                        else:
-                            st.session_state.recognition_result = result
-                            st.session_state.error = None
+                with col3:
+                    if st.button("Add New Person"):
+                        st.warning(
+                            "Add new person is not yet implemented. Requires database integration."
+                        )
 
         # Display results or errors
         if st.session_state.error:
