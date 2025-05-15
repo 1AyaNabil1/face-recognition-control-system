@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from app.recognizer import FaceRecognizer
+from app.recognition.face_recognizer import FaceRecognizer
 from api.utils import decode_base64_image, encode_image_base64
 import os
 
@@ -28,6 +28,21 @@ def recognize_face():
             "annotated_image": encode_image_base64(annotated_img),
         }
         return jsonify(response), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/add-person", methods=["POST"])
+def add_person():
+    data = request.get_json()
+    if not data or "name" not in data or "image" not in data:
+        return jsonify({"error": "Name or image missing"}), 400
+    try:
+        image_b64 = data["image"]
+        name = data["name"]
+        image = decode_base64_image(image_b64)
+        recognizer.add_new_person(image, name)
+        return jsonify({"message": "Person added successfully!"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
