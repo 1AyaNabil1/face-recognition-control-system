@@ -24,11 +24,10 @@ if uploaded_file is not None:
         # Display the uploaded image
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
-            # Instead of passing a PIL Image directly, pass the raw bytes to st.image
             st.image(
                 img_bytes,
                 caption="Uploaded Image",
-                use_container_width=True,
+                use_container_width=True,  # This will work with Streamlit 1.38.0+
             )
 
         if st.button("🚀 Recognize Face"):
@@ -64,7 +63,7 @@ if uploaded_file is not None:
                         st.image(
                             annotated_image,
                             caption="Detected Faces",
-                            use_container_width=True,
+                            use_container_width=True,  # This will work with Streamlit 1.38.0+
                         )
                 else:
                     st.error(
