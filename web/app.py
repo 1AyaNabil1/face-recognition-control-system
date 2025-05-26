@@ -1,143 +1,153 @@
 import streamlit as st
 import requests
-import base64
+import cv2
+import numpy as np
 from PIL import Image
-import io
-from typing import Tuple, Dict, Optional
+import tempfile
+import os
 
-st.set_page_config(page_title="Face Recognition System", layout="centered")
+# Set the title of the Streamlit app
+st.set_page_config(page_title="Face Recognition Control System", layout="wide")
 
-# Dark Theme CSS
-st.markdown(
-    """
-<style>
-.stApp { background-color: #0e0e0e; color: #ffffff; }
-.sidebar .sidebar-content { background-color: #1c1c1c; color: white; }
-.stButton>button {
-    background-color: #27ae60; color: white; border-radius: 5px; padding: 10px 20px;
-}
-.stButton>button:hover { background-color: #219653; }
-.stError { background-color: #e74c3c; color: white; padding: 10px; border-radius: 5px; }
-.element-container:has(div[data-testid="stFileUploader"]) + div {
-        display: none;
-    }
-</style>
-""",
-    unsafe_allow_html=True,
-)
-
-
+# Define the base URL for the Flask API
 API_URL = (
     "https://ayanabil1--face-recognition-system-recognize-face.modal.run/api/recognize"
 )
-API_ADD_URL = (
-    "https://ayanabil1--face-recognition-system-recognize-face.modal.run/api/add-person"
-)
 
 
-def process_image(file) -> Tuple[Optional[bytes], Optional[str]]:
-    try:
-        img_bytes = file.read()
-        Image.open(io.BytesIO(img_bytes)).verify()
-        img_b64 = base64.b64encode(img_bytes).decode("utf-8")
-        return img_bytes, img_b64
-    except Exception as e:
-        return None, f"Invalid image file: {str(e)}"
+# Function to capture image from webcam
+def capture_image():
+    cap = cv2.VideoCapture(0)
+    st.info("Press 'c' to capture an image or 'q' to quit.")
+    img_captured = False
+    img = None
+
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            st.error("Failed to access the webcam.")
+            break
+        cv2.imshow("Press 'c' to capture or 'q' to quit", frame)
+        key = cv2.waitKey(1)
+        if key == ord("c"):
+            img = frame
+            img_captured = True
+            break
+        elif key == ord("q"):
+            break
+
+    cap.release()
+    cv2.destroyAllWindows()
+    return img if img_captured else None
 
 
-def display_image(img_bytes: bytes, caption: str, width: int = 500):
-    try:
-        st.image(img_bytes, caption=caption, width=width)
-    except Exception as e:
-        st.error(f"Failed to display image: {str(e)}")
+# Function to convert OpenCV image to bytes
+def convert_image_to_bytes(img):
+    _, buffer = cv2.imencode(".jpg", img)
+    return buffer.tobytes()
 
 
-def call_api(image_b64: str) -> Dict:
-    try:
-        response = requests.post(API_URL, json={"image": image_b64}, timeout=30)
-        response.raise_for_status()
-        return response.json()
-    except requests.RequestException as e:
-        return {"error": str(e)}
+# Function to register a new user
+def register_user(name, image_bytes):
+    files = {"image": ("image.jpg", image_bytes, "image/jpeg")}
+    data = {"name": name}
+    response = requests.post(f"{API_URL}/register", files=files, data=data)
+    return response
 
 
-def add_person_api(name: str, image_b64: str) -> Dict:
-    try:
-        response = requests.post(
-            API_ADD_URL, json={"name": name, "image": image_b64}, timeout=30
+# Function to recognize face from image
+def recognize_face(image_bytes):
+    files = {"image": ("image.jpg", image_bytes, "image/jpeg")}
+    response = requests.post(f"{API_URL}/recognize", files=files)
+    return response
+
+
+# Function to get list of registered users
+def get_users():
+    response = requests.get(f"{API_URL}/users")
+    return response
+
+
+# Function to get system logs
+def get_logs():
+    response = requests.get(f"{API_URL}/logs")
+    return response
+
+
+# Main application
+def main():
+    st.title("Face Recognition Control System")
+    st.sidebar.title("Navigation")
+    app_mode = st.sidebar.selectbox(
+        "Choose the app mode",
+        ["Home", "Live Recognition", "Register User", "View Users", "System Logs"],
+    )
+
+    if app_mode == "Home":
+        st.write(
+            "Welcome to the Face Recognition Control System. Use the sidebar to navigate."
         )
-        response.raise_for_status()
-        return response.json()
-    except requests.RequestException as e:
-        return {"error": str(e)}
 
+    elif app_mode == "Live Recognition":
+        st.subheader("Live Face Recognition")
+        img = capture_image()
+        if img is not None:
+            st.image(
+                cv2.cvtColor(img, cv2.COLOR_BGR2RGB),
+                caption="Captured Image",
+                use_column_width=True,
+            )
+            image_bytes = convert_image_to_bytes(img)
+            with st.spinner("Recognizing..."):
+                response = recognize_face(image_bytes)
+                if response.status_code == 200:
+                    result = response.json()
+                    st.success(f"Recognized: {result.get('name', 'Unknown')}")
+                else:
+                    st.error("Recognition failed.")
 
-st.sidebar.title("Face Recognition System")
-st.sidebar.write("Upload an image or add a new person to the system.")
-st.sidebar.write("Developed by: Aya Nabil")
-
-st.title("🔍 Face Recognition Control System")
-upload_placeholder = st.empty()
-uploaded_file = upload_placeholder.file_uploader(
-    "📂 Upload an Image", type=["jpg", "jpeg", "png"], key="file_uploader"
-)
-
-if uploaded_file:
-    upload_placeholder.empty()  # Clear the uploader section after upload
-
-if uploaded_file:
-    img_bytes, img_b64_or_error = process_image(uploaded_file)
-    if isinstance(img_b64_or_error, str):
-        st.error(img_b64_or_error)
-    else:
-        img_b64 = img_b64_or_error
-        st.subheader("Uploaded Image")
-        display_image(img_bytes, "Uploaded Image")
-
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            if st.button("Image Recognition"):
-                with st.spinner("Recognizing faces..."):
-                    result = call_api(img_b64)
-                    if "error" in result:
-                        st.error(f"Recognition Failed: {result['error']}")
+    elif app_mode == "Register User":
+        st.subheader("Register a New User")
+        name = st.text_input("Enter the name of the user")
+        uploaded_file = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
+        if st.button("Register"):
+            if name and uploaded_file:
+                image_bytes = uploaded_file.read()
+                with st.spinner("Registering..."):
+                    response = register_user(name, image_bytes)
+                    if response.status_code == 200:
+                        st.success("User registered successfully.")
                     else:
-                        st.success(
-                            f"🎯 Match: {result['result']} (Confidence: {result['confidence']})"
-                        )
-                        st.subheader("📋 Top Matches")
-                        for match in result["top_matches"]:
-                            st.write(
-                                f"- **{match['name']}** — Confidence: {round(match['score'], 4)}"
-                            )
+                        st.error("Registration failed.")
+            else:
+                st.warning("Please provide both name and image.")
 
-                        st.subheader("📸 Annotated Image")
-                        annotated_b64 = result["annotated_image"]
-                        annotated_image = base64.b64decode(annotated_b64)
-                        display_image(annotated_image, "Detected Faces")
+    elif app_mode == "View Users":
+        st.subheader("Registered Users")
+        response = get_users()
+        if response.status_code == 200:
+            users = response.json().get("users", [])
+            if users:
+                for user in users:
+                    st.write(f"- {user}")
+            else:
+                st.info("No users registered yet.")
+        else:
+            st.error("Failed to fetch users.")
 
-        with col2:
-            if st.button("Live Recognition"):
-                st.warning("Live recognition is not yet implemented.")
+    elif app_mode == "System Logs":
+        st.subheader("System Logs")
+        response = get_logs()
+        if response.status_code == 200:
+            logs = response.json().get("logs", [])
+            if logs:
+                for log in logs:
+                    st.write(f"{log}")
+            else:
+                st.info("No logs available.")
+        else:
+            st.error("Failed to fetch logs.")
 
-        with col3:
-            if st.button("Add New Person"):
-                name = st.text_input("Enter Person's Name")
-                add_image = st.file_uploader(
-                    "Upload Image for New Person",
-                    type=["jpg", "jpeg", "png"],
-                    key="add_person",
-                )
-                if st.button("Submit"):
-                    if name and add_image:
-                        img_bytes_new, img_b64_or_error_new = process_image(add_image)
-                        if isinstance(img_b64_or_error_new, str):
-                            st.error(img_b64_or_error_new)
-                        else:
-                            response = add_person_api(name, img_b64_or_error_new)
-                            if "error" in response:
-                                st.error(response["error"])
-                            else:
-                                st.success(response["message"])
-                    else:
-                        st.warning("Please provide both a name and an image.")
+
+if __name__ == "__main__":
+    main()
