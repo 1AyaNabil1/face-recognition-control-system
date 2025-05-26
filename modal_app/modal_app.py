@@ -7,54 +7,56 @@ sys.path.append(BASE_DIR)
 
 app = modal.App("face-recognition-system")
 
+# Create image with all required dependencies
 image = (
     modal.Image.debian_slim()
-    .apt_install("libgl1-mesa-glx", "libglib2.0-0")
+    .apt_install(
+        "libgl1-mesa-glx",  # OpenCV dependencies
+        "libglib2.0-0",
+        "postgresql-client",  # PostgreSQL client
+        "redis-tools",  # Redis tools
+    )
     .pip_install(
-        "flask==2.3.3",
-        "flask-cors==4.0.1",
+        # FastAPI and dependencies
+        "fastapi[all]==0.109.2",
+        "uvicorn==0.27.1",
+        "python-multipart==0.0.9",
+        "email-validator==2.1.0.post1",
+        # Database and caching
+        "sqlalchemy[asyncio]==2.0.27",
+        "asyncpg==0.29.0",
+        "redis==5.0.1",
+        "aioredis==2.0.1",
+        # ML and Vision libraries
         "onnxruntime==1.16.0",
         "insightface==0.7.3",
         "numpy==1.26.4",
+        "opencv-python==4.9.0.80",
         "pillow==10.4.0",
         "scikit-learn==1.5.1",
-        "gunicorn==23.0.0",
-        "ultralytics==8.2.58",
-        "streamlit==1.36.0",
-        "requests==2.31.0",
-        "fastapi[standard]==0.111.0",
+        # Monitoring and logging
+        "structlog==24.1.0",
+        "prometheus-client==0.19.0",
+        "sentry-sdk[fastapi]==1.40.4",
+        # Testing
+        "pytest==7.4.3",
+        "pytest-asyncio==0.21.1",
+        "httpx==0.25.2",
     )
 )
 
 
 @app.function(image=image)
-@modal.fastapi_endpoint(method="POST")
-def run_flask():
-    from api.app import app as flask_app
-    from app.recognition.face_recognizer import FaceRecognizer
-    from api.utils import decode_base64_image, encode_image_base64
+@modal.asgi_app()
+def fastapi_app():
+    """
+    Deploy the FastAPI application.
+    Includes all endpoints:
+    - Main API (/recognize, /register, /verify)
+    - Mobile API (/api/v1/mobile/*)
+    - Health checks
+    - Monitoring
+    """
+    from app.main import app
 
-    recognizer = FaceRecognizer()
-
-    @flask_app.route("/api/recognize", methods=["POST"])
-    def recognize_face():
-        data = flask_app.current_request.json
-        if not data or "image" not in data:
-            return {"error": "No image provided"}, 400
-        try:
-            image_b64 = data["image"]
-            image = decode_base64_image(image_b64)
-            name, score, top_matches, annotated_img = recognizer.recognize_image(image)
-            response = {
-                "result": name,
-                "confidence": round(score, 4),
-                "top_matches": [
-                    {"name": label, "score": round(s, 4)} for label, s in top_matches
-                ],
-                "annotated_image": encode_image_base64(annotated_img),
-            }
-            return response, 200
-        except Exception as e:
-            return {"error": str(e)}, 500
-
-    return flask_app
+    return app
