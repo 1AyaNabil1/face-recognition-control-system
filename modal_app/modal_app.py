@@ -49,15 +49,8 @@ def fastapi_app():
     - Main API (/recognize, /register, /verify)
     - Mobile API (/api/v1/mobile/*)
     """
-    # Set environment variables from core secrets
-    core_secrets = modal.Secret.from_name("core-secrets")
-
-    # Set each environment variable using get() method
-    os.environ["DATABASE_URL"] = core_secrets.get("DATABASE_URL")
-    os.environ["MODEL_PATH"] = core_secrets.get("MODEL_PATH")
-    os.environ["CONFIDENCE_THRESHOLD"] = core_secrets.get("CONFIDENCE_THRESHOLD")
-    os.environ["USE_GPU"] = core_secrets.get("USE_GPU")
-    os.environ["ENABLE_CACHING"] = core_secrets.get("ENABLE_CACHING")
+    # The secrets are automatically mounted as environment variables
+    # No need to manually set them
 
     # Import and return the FastAPI app
     from app.main import app
