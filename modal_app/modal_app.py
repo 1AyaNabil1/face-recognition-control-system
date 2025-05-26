@@ -1,3 +1,5 @@
+"""Modal deployment configuration for the face recognition system."""
+
 import sys
 import os
 import modal
@@ -5,28 +7,25 @@ import modal
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(BASE_DIR)
 
+# Initialize Modal app
 app = modal.App("face-recognition-system")
 
-# Create image with all required dependencies
+# Create image with required dependencies
 image = (
     modal.Image.debian_slim()
     .apt_install(
         "libgl1-mesa-glx",  # OpenCV dependencies
         "libglib2.0-0",
         "postgresql-client",  # PostgreSQL client
-        "redis-tools",  # Redis tools
     )
     .pip_install(
         # FastAPI and dependencies
         "fastapi[all]==0.109.2",
         "uvicorn==0.27.1",
         "python-multipart==0.0.9",
-        "email-validator==2.1.0.post1",
-        # Database and caching
+        # Database
         "sqlalchemy[asyncio]==2.0.27",
         "asyncpg==0.29.0",
-        "redis==5.0.1",
-        "aioredis==2.0.1",
         # ML and Vision libraries
         "onnxruntime==1.16.0",
         "insightface==0.7.3",
@@ -34,29 +33,32 @@ image = (
         "opencv-python==4.9.0.80",
         "pillow==10.4.0",
         "scikit-learn==1.5.1",
-        # Monitoring and logging
-        "structlog==24.1.0",
-        "prometheus-client==0.19.0",
-        "sentry-sdk[fastapi]==1.40.4",
-        # Testing
-        "pytest==7.4.3",
-        "pytest-asyncio==0.21.1",
-        "httpx==0.25.2",
     )
 )
 
 
-@app.function(image=image)
+@app.function(
+    image=image,
+    secrets=[modal.Secret.from_name("core-secrets")],
+)
 @modal.asgi_app()
 def fastapi_app():
     """
-    Deploy the FastAPI application.
+    Deploy the FastAPI application with core configuration.
     Includes all endpoints:
     - Main API (/recognize, /register, /verify)
     - Mobile API (/api/v1/mobile/*)
-    - Health checks
-    - Monitoring
     """
+    # Set environment variables from core secrets
+    core_secrets = modal.Secret.from_name("core-secrets")
+    for key, value in core_secrets.items():
+        os.environ[key] = str(value)
+
+    # Import and return the FastAPI app
     from app.main import app
 
     return app
+
+
+if __name__ == "__main__":
+    modal.runner.main()
