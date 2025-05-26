@@ -1,0 +1,344 @@
+{
+    "info": {
+        "name": "Face Recognition Mobile API",
+        "description": "Mobile-optimized endpoints for face recognition system",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Recognize Face",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{auth_token}}",
+                        "type": "text",
+                        "disabled": true
+                    }
+                ],
+                "body": {
+                    "mode": "formdata",
+                    "formdata": [
+                        {
+                            "key": "file",
+                            "type": "file",
+                            "src": "",
+                            "description": "Image file (JPEG/PNG)"
+                        }
+                    ]
+                },
+                "url": {
+                    "raw": "{{base_url}}/api/v1/mobile/recognize",
+                    "host": ["{{base_url}}"],
+                    "path": ["api", "v1", "mobile", "recognize"]
+                },
+                "description": "Recognize a face in an image with mobile-optimized response"
+            },
+            "response": [
+                {
+                    "name": "Success Response",
+                    "originalRequest": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "file",
+                                    "type": "file",
+                                    "src": ""
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/mobile/recognize",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "mobile", "recognize"]
+                        }
+                    },
+                    "status": "OK",
+                    "code": 200,
+                    "_postman_previewlanguage": "json",
+                    "header": [
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ],
+                    "body": {
+                        "success": true,
+                        "name": "John Doe",
+                        "confidence": 0.94,
+                        "face_box": [100, 80, 200, 180],
+                        "quality": 0.82,
+                        "matched": true,
+                        "inference_time_ms": 156,
+                        "liveness_status": "real"
+                    }
+                },
+                {
+                    "name": "Error Response - No Face",
+                    "originalRequest": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "file",
+                                    "type": "file",
+                                    "src": ""
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/mobile/recognize",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "mobile", "recognize"]
+                        }
+                    },
+                    "status": "OK",
+                    "code": 200,
+                    "_postman_previewlanguage": "json",
+                    "header": [
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ],
+                    "body": {
+                        "success": false,
+                        "error_code": "NO_FACE_DETECTED",
+                        "error_message": "No face detected in image",
+                        "inference_time_ms": 45
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Register Face",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{auth_token}}",
+                        "type": "text",
+                        "disabled": true
+                    }
+                ],
+                "body": {
+                    "mode": "formdata",
+                    "formdata": [
+                        {
+                            "key": "file",
+                            "type": "file",
+                            "src": "",
+                            "description": "Image file (JPEG/PNG)"
+                        },
+                        {
+                            "key": "name",
+                            "type": "text",
+                            "value": "John Doe",
+                            "description": "Person's name"
+                        },
+                        {
+                            "key": "metadata",
+                            "type": "text",
+                            "value": "{\"department\":\"Engineering\"}",
+                            "description": "Optional metadata (JSON string)"
+                        }
+                    ]
+                },
+                "url": {
+                    "raw": "{{base_url}}/api/v1/mobile/register",
+                    "host": ["{{base_url}}"],
+                    "path": ["api", "v1", "mobile", "register"]
+                },
+                "description": "Register a new face with mobile-optimized response"
+            },
+            "response": [
+                {
+                    "name": "Success Response",
+                    "originalRequest": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "file",
+                                    "type": "file",
+                                    "src": ""
+                                },
+                                {
+                                    "key": "name",
+                                    "type": "text",
+                                    "value": "John Doe"
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/mobile/register",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "mobile", "register"]
+                        }
+                    },
+                    "status": "OK",
+                    "code": 200,
+                    "_postman_previewlanguage": "json",
+                    "header": [
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ],
+                    "body": {
+                        "success": true,
+                        "person_id": "123e4567-e89b-12d3-a456-426614174000",
+                        "quality": 0.85,
+                        "inference_time_ms": 234
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Verify Face",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{auth_token}}",
+                        "type": "text",
+                        "disabled": true
+                    }
+                ],
+                "body": {
+                    "mode": "formdata",
+                    "formdata": [
+                        {
+                            "key": "file",
+                            "type": "file",
+                            "src": "",
+                            "description": "Image file (JPEG/PNG)"
+                        },
+                        {
+                            "key": "person_id",
+                            "type": "text",
+                            "value": "123e4567-e89b-12d3-a456-426614174000",
+                            "description": "Person ID to verify against"
+                        }
+                    ]
+                },
+                "url": {
+                    "raw": "{{base_url}}/api/v1/mobile/verify",
+                    "host": ["{{base_url}}"],
+                    "path": ["api", "v1", "mobile", "verify"]
+                },
+                "description": "Verify a face against a registered person with mobile-optimized response"
+            },
+            "response": [
+                {
+                    "name": "Success Response",
+                    "originalRequest": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "file",
+                                    "type": "file",
+                                    "src": ""
+                                },
+                                {
+                                    "key": "person_id",
+                                    "type": "text",
+                                    "value": "123e4567-e89b-12d3-a456-426614174000"
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/mobile/verify",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "mobile", "verify"]
+                        }
+                    },
+                    "status": "OK",
+                    "code": 200,
+                    "_postman_previewlanguage": "json",
+                    "header": [
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ],
+                    "body": {
+                        "success": true,
+                        "matched": true,
+                        "confidence": 0.88,
+                        "quality": 0.92,
+                        "inference_time_ms": 167,
+                        "liveness_status": "real"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Health Check",
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{base_url}}/api/v1/mobile/health",
+                    "host": ["{{base_url}}"],
+                    "path": ["api", "v1", "mobile", "health"]
+                },
+                "description": "Get mobile-optimized health status"
+            },
+            "response": [
+                {
+                    "name": "Success Response",
+                    "originalRequest": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/mobile/health",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "mobile", "health"]
+                        }
+                    },
+                    "status": "OK",
+                    "code": 200,
+                    "_postman_previewlanguage": "json",
+                    "header": [
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ],
+                    "body": {
+                        "status": "healthy",
+                        "api_version": "1.0.0",
+                        "models_ready": true,
+                        "last_updated": "2024-01-01T00:00:00Z"
+                    }
+                }
+            ]
+        }
+    ],
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://localhost:8000",
+            "type": "string"
+        },
+        {
+            "key": "auth_token",
+            "value": "",
+            "type": "string"
+        }
+    ]
+} 

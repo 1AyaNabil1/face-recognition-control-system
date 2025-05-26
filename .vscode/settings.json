@@ -6,6 +6,7 @@
         "imread",
         "imwrite",
         "lindevs",
+        "multiproc",
         "padx",
         "pady",
         "xyxy",

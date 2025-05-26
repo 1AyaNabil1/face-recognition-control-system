@@ -1,16 +1,113 @@
 {
     "info": {
         "name": "Face Recognition API",
-        "description": "Production-grade face recognition system",
-        "version": "1.0.0"
+        "description": "Production-grade face recognition API with anti-spoofing and quality checks",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
     },
     "item": [
         {
-            "name": "Authentication",
-            "item": [
+            "name": "Recognize Faces",
+            "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                    "mode": "formdata",
+                    "formdata": [
+                        {
+                            "key": "file",
+                            "type": "file",
+                            "src": "",
+                            "description": "Image file containing faces to recognize"
+                        }
+                    ]
+                },
+                "url": {
+                    "raw": "{{base_url}}/recognize",
+                    "host": ["{{base_url}}"],
+                    "path": ["recognize"]
+                },
+                "description": "Recognize faces in an image with full metadata including quality metrics and attributes."
+            },
+            "response": [
                 {
-                    "name": "Login",
-                    "request": {
+                    "name": "Success Response",
+                    "originalRequest": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "file",
+                                    "type": "file",
+                                    "src": ""
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/recognize",
+                            "host": ["{{base_url}}"],
+                            "path": ["recognize"]
+                        }
+                    },
+                    "status": "OK",
+                    "code": 200,
+                    "_postman_previewlanguage": "json",
+                    "header": [
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ],
+                    "body": {
+                        "faces": [
+                            {
+                                "bbox": [100, 100, 200, 200],
+                                "quality_score": 0.95,
+                                "is_real": true,
+                                "embedding": [],
+                                "attributes": {
+                                    "age": 25,
+                                    "gender": "Male",
+                                    "emotion": "Neutral"
+                                },
+                                "matches": [
+                                    {
+                                        "name": "John Doe",
+                                        "score": 0.92
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Register Person",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"name\": \"John Doe\",\n    \"images\": [\n        \"base64_encoded_image_1\",\n        \"base64_encoded_image_2\"\n    ]\n}"
+                },
+                "url": {
+                    "raw": "{{base_url}}/register",
+                    "host": ["{{base_url}}"],
+                    "path": ["register"]
+                },
+                "description": "Register a new person with multiple face images for recognition."
+            },
+            "response": [
+                {
+                    "name": "Success Response",
+                    "originalRequest": {
                         "method": "POST",
                         "header": [
                             {
@@ -18,222 +115,165 @@
                                 "value": "application/json"
                             }
                         ],
-                        "url": {
-                            "raw": "{{base_url}}/api/v1/auth/login",
-                            "host": ["{{base_url}}"],
-                            "path": ["api", "v1", "auth", "login"]
-                        },
                         "body": {
                             "mode": "raw",
-                            "raw": {
-                                "username": "admin",
-                                "password": "your-password"
-                            }
+                            "raw": "{\n    \"name\": \"John Doe\",\n    \"images\": [\n        \"base64_encoded_image_1\",\n        \"base64_encoded_image_2\"\n    ]\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/register",
+                            "host": ["{{base_url}}"],
+                            "path": ["register"]
                         }
+                    },
+                    "status": "OK",
+                    "code": 200,
+                    "_postman_previewlanguage": "json",
+                    "header": [
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ],
+                    "body": {
+                        "success": true,
+                        "registered_faces": 2,
+                        "quality_scores": [0.95, 0.92]
                     }
+                }
+            ]
+        },
+        {
+            "name": "Verify Face",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"name\": \"John Doe\",\n    \"image\": \"base64_encoded_image\"\n}"
                 },
+                "url": {
+                    "raw": "{{base_url}}/verify",
+                    "host": ["{{base_url}}"],
+                    "path": ["verify"]
+                },
+                "description": "Verify if a face image matches a registered person."
+            },
+            "response": [
                 {
-                    "name": "Refresh Token",
-                    "request": {
+                    "name": "Success Response",
+                    "originalRequest": {
                         "method": "POST",
                         "header": [
                             {
-                                "key": "Authorization",
-                                "value": "Bearer {{refresh_token}}"
+                                "key": "Content-Type",
+                                "value": "application/json"
                             }
                         ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"John Doe\",\n    \"image\": \"base64_encoded_image\"\n}"
+                        },
                         "url": {
-                            "raw": "{{base_url}}/api/v1/auth/refresh",
+                            "raw": "{{base_url}}/verify",
                             "host": ["{{base_url}}"],
-                            "path": ["api", "v1", "auth", "refresh"]
+                            "path": ["verify"]
+                        }
+                    },
+                    "status": "OK",
+                    "code": 200,
+                    "_postman_previewlanguage": "json",
+                    "header": [
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ],
+                    "body": {
+                        "match": true,
+                        "confidence": 0.92,
+                        "quality_score": 0.95,
+                        "attributes": {
+                            "age": 25,
+                            "gender": "Male",
+                            "emotion": "Neutral"
                         }
                     }
                 }
             ]
         },
         {
-            "name": "Face Recognition",
-            "item": [
-                {
-                    "name": "Register Face",
-                    "request": {
-                        "method": "POST",
-                        "header": [
-                            {
-                                "key": "Authorization",
-                                "value": "Bearer {{access_token}}"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{base_url}}/api/v1/faces/register",
-                            "host": ["{{base_url}}"],
-                            "path": ["api", "v1", "faces", "register"]
-                        },
-                        "body": {
-                            "mode": "formdata",
-                            "formdata": [
-                                {
-                                    "key": "image",
-                                    "type": "file",
-                                    "src": []
-                                },
-                                {
-                                    "key": "name",
-                                    "type": "text",
-                                    "value": "John Doe"
-                                },
-                                {
-                                    "key": "model",
-                                    "type": "text",
-                                    "value": "ensemble"
-                                },
-                                {
-                                    "key": "overwrite",
-                                    "type": "boolean",
-                                    "value": false
-                                }
-                            ]
-                        }
-                    }
+            "name": "Health Check",
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{base_url}}/health",
+                    "host": ["{{base_url}}"],
+                    "path": ["health"]
                 },
+                "description": "Check the health status of all system components."
+            },
+            "response": [
                 {
-                    "name": "Recognize Face",
-                    "request": {
-                        "method": "POST",
-                        "header": [
-                            {
-                                "key": "Authorization",
-                                "value": "Bearer {{access_token}}"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{base_url}}/api/v1/faces/recognize",
-                            "host": ["{{base_url}}"],
-                            "path": ["api", "v1", "faces", "recognize"]
-                        },
-                        "body": {
-                            "mode": "formdata",
-                            "formdata": [
-                                {
-                                    "key": "image",
-                                    "type": "file",
-                                    "src": []
-                                },
-                                {
-                                    "key": "model",
-                                    "type": "text",
-                                    "value": "ensemble"
-                                },
-                                {
-                                    "key": "min_confidence",
-                                    "type": "number",
-                                    "value": 0.6
-                                },
-                                {
-                                    "key": "include_attributes",
-                                    "type": "boolean",
-                                    "value": true
-                                },
-                                {
-                                    "key": "max_faces",
-                                    "type": "number",
-                                    "value": 5
-                                }
-                            ]
-                        }
-                    }
-                },
-                {
-                    "name": "Delete Face",
-                    "request": {
-                        "method": "DELETE",
-                        "header": [
-                            {
-                                "key": "Authorization",
-                                "value": "Bearer {{access_token}}"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{base_url}}/api/v1/faces/{name}",
-                            "host": ["{{base_url}}"],
-                            "path": ["api", "v1", "faces", "{name}"]
-                        }
-                    }
-                },
-                {
-                    "name": "List Faces",
-                    "request": {
+                    "name": "Success Response",
+                    "originalRequest": {
                         "method": "GET",
-                        "header": [
-                            {
-                                "key": "Authorization",
-                                "value": "Bearer {{access_token}}"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{base_url}}/api/v1/faces",
-                            "host": ["{{base_url}}"],
-                            "path": ["api", "v1", "faces"],
-                            "query": [
-                                {
-                                    "key": "page",
-                                    "value": "1"
-                                },
-                                {
-                                    "key": "per_page",
-                                    "value": "10"
-                                }
-                            ]
-                        }
-                    }
-                }
-            ]
-        },
-        {
-            "name": "System",
-            "item": [
-                {
-                    "name": "Health Check",
-                    "request": {
-                        "method": "GET",
+                        "header": [],
                         "url": {
                             "raw": "{{base_url}}/health",
                             "host": ["{{base_url}}"],
                             "path": ["health"]
                         }
-                    }
-                },
-                {
-                    "name": "Metrics",
-                    "request": {
-                        "method": "GET",
-                        "header": [
-                            {
-                                "key": "Authorization",
-                                "value": "Bearer {{access_token}}"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{base_url}}/metrics",
-                            "host": ["{{base_url}}"],
-                            "path": ["metrics"]
+                    },
+                    "status": "OK",
+                    "code": 200,
+                    "_postman_previewlanguage": "json",
+                    "header": [
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json"
                         }
-                    }
-                },
-                {
-                    "name": "Model Info",
-                    "request": {
-                        "method": "GET",
-                        "header": [
-                            {
-                                "key": "Authorization",
-                                "value": "Bearer {{access_token}}"
+                    ],
+                    "body": {
+                        "status": "healthy",
+                        "version": "1.0.0",
+                        "timestamp": "2024-01-01T00:00:00Z",
+                        "components": {
+                            "api": {
+                                "status": "healthy",
+                                "timestamp": "2024-01-01T00:00:00Z"
+                            },
+                            "database": {
+                                "status": "healthy",
+                                "timestamp": "2024-01-01T00:00:00Z"
+                            },
+                            "redis": {
+                                "status": "healthy",
+                                "timestamp": "2024-01-01T00:00:00Z"
+                            },
+                            "model": {
+                                "status": "healthy",
+                                "device": "cuda",
+                                "models": {
+                                    "mtcnn": {
+                                        "loaded": true,
+                                        "last_updated": "2024-01-01T00:00:00Z"
+                                    },
+                                    "facenet": {
+                                        "loaded": true,
+                                        "last_updated": "2024-01-01T00:00:00Z"
+                                    },
+                                    "insightface": {
+                                        "loaded": true,
+                                        "last_updated": "2024-01-01T00:00:00Z"
+                                    }
+                                }
                             }
-                        ],
-                        "url": {
-                            "raw": "{{base_url}}/api/v1/models/info",
-                            "host": ["{{base_url}}"],
-                            "path": ["api", "v1", "models", "info"]
                         }
                     }
                 }
@@ -243,15 +283,8 @@
     "variable": [
         {
             "key": "base_url",
-            "value": "https://your-domain.modal.run"
-        },
-        {
-            "key": "access_token",
-            "value": "your-access-token"
-        },
-        {
-            "key": "refresh_token",
-            "value": "your-refresh-token"
+            "value": "http://localhost:8000",
+            "type": "string"
         }
     ]
 } 
