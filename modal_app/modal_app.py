@@ -51,8 +51,13 @@ def fastapi_app():
     """
     # Set environment variables from core secrets
     core_secrets = modal.Secret.from_name("core-secrets")
-    for key, value in core_secrets.items():
-        os.environ[key] = str(value)
+
+    # Set each environment variable individually
+    os.environ["DATABASE_URL"] = core_secrets["DATABASE_URL"]
+    os.environ["MODEL_PATH"] = core_secrets["MODEL_PATH"]
+    os.environ["CONFIDENCE_THRESHOLD"] = core_secrets["CONFIDENCE_THRESHOLD"]
+    os.environ["USE_GPU"] = core_secrets["USE_GPU"]
+    os.environ["ENABLE_CACHING"] = core_secrets["ENABLE_CACHING"]
 
     # Import and return the FastAPI app
     from app.main import app
