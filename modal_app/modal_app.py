@@ -10,6 +10,9 @@ sys.path.append(BASE_DIR)
 # Initialize Modal app
 app = modal.App("face-recognition-system")
 
+# Create stub for the app
+stub = modal.Stub("face-recognition-system")
+
 # Create image with required dependencies
 image = (
     modal.Image.debian_slim()
@@ -34,10 +37,12 @@ image = (
         "pillow==10.4.0",
         "scikit-learn==1.5.1",
     )
+    # Copy the application code into the image
+    .copy_local_dir("app", "/root/app")
 )
 
 
-@app.function(
+@stub.function(
     image=image,
     secrets=[modal.Secret.from_name("core-secrets")],
 )
@@ -50,8 +55,6 @@ def fastapi_app():
     - Mobile API (/api/v1/mobile/*)
     """
     # The secrets are automatically mounted as environment variables
-    # No need to manually set them
-
     # Import and return the FastAPI app
     from app.main import app
 
@@ -59,4 +62,4 @@ def fastapi_app():
 
 
 if __name__ == "__main__":
-    modal.runner.main()
+    stub.serve()
