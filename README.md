@@ -8,7 +8,6 @@ Production-ready face recognition system with advanced AI capabilities, deployed
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.104.1-green.svg)](https://fastapi.tiangolo.com/)
 [![Modal](https://img.shields.io/badge/Modal-Latest-purple.svg)](https://modal.com/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![Tests](https://github.com/1AyaNabil1/face-recognition-control-system/workflows/tests/badge.svg)](https://github.com/1AyaNabil1/face-recognition-control-system/actions)
 
 ## 🎯 Features
 
