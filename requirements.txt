@@ -1,3 +1,55 @@
-streamlit==1.40.0
-requests==2.31.0
-pillow==10.4.0
+# Core API Framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+pydantic-settings==2.0.3
+python-multipart==0.0.6
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+
+# AI/ML Stack
+torch==2.1.0
+torchvision==0.16.0
+facenet-pytorch==2.5.3
+opencv-python-headless==4.8.1.78
+numpy==1.24.3
+scikit-learn==1.3.2
+pillow==10.1.0
+deepface==0.0.79
+onnxruntime-gpu==1.16.3
+insightface==0.7.3
+ultralytics==8.0.227
+
+# Database & Caching
+redis==5.0.1
+asyncpg==0.29.0
+sqlalchemy[asyncio]==2.0.23
+alembic==1.12.1
+
+# Monitoring & Logging
+structlog==23.2.0
+prometheus-client==0.19.0
+sentry-sdk[fastapi]==1.38.0
+opentelemetry-api==1.21.0
+opentelemetry-sdk==1.21.0
+opentelemetry-instrumentation-fastapi==0.42b0
+
+# Production Utilities
+gunicorn==21.2.0
+httpx==0.25.2
+python-dotenv==1.0.0
+tenacity==8.2.3
+aiofiles==23.2.1
+
+# Testing
+pytest==7.4.3
+pytest-asyncio==0.21.1
+pytest-cov==4.1.0
+pytest-benchmark==4.0.0
+factory-boy==3.3.0
+faker==20.1.0
+
+# Security
+cryptography==41.0.5
+python-jose[cryptography]==3.3.0
+certifi==2023.11.17
