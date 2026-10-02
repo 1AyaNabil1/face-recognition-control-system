@@ -8,3 +8,9 @@ debug_crops/
 logs/
 scripts/
 tests/
+
+# Secrets: never commit these
+.env
+*.env
+!*.env.example
+deployment/temp_secrets.json

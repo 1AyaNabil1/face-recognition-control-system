@@ -1,5 +1,6 @@
 """Script to set up core Modal secrets for the face recognition system."""
 
+import os
 import subprocess
 
 
@@ -12,7 +13,7 @@ def set_modal_secret():
             "secret",
             "create",
             "core-secrets",
-            "DATABASE_URL=postgresql://USER:PASSWORD@HOST/DBNAME",
+            f"DATABASE_URL={os.environ['DATABASE_URL']}",
             "MODEL_PATH=/root/models",
             "CONFIDENCE_THRESHOLD=0.6",
             "USE_GPU=false",
