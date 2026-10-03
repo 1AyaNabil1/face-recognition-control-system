@@ -1,0 +1,10 @@
+# Lint and test dependencies (what CI installs). The tests replace the YOLO and
+# InsightFace models with fakes, so the heavy runtime packages are not needed.
+flask>=3.0,<4
+flask-cors>=4.0
+python-dotenv>=1.0
+numpy>=1.24
+opencv-python-headless>=4.8,<5
+
+pytest>=8.0
+ruff==0.16.10
