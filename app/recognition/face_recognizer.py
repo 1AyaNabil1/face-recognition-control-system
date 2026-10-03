@@ -1,112 +1,146 @@
-from collections import defaultdict
-import numpy as np
-from sklearn.metrics.pairwise import cosine_similarity
-from typing import List, Tuple, Optional
 import logging
+from collections import defaultdict
+from typing import Iterable, List, Optional, Tuple
 
-logging.basicConfig(level=logging.INFO)
+import numpy as np
+
 logger = logging.getLogger(__name__)
+
+EMBEDDING_DIM = 512
+UNKNOWN = "Unknown"
+
+
+def l2_normalize(vector: np.ndarray) -> Optional[np.ndarray]:
+    """Return the unit-length version of `vector`, or None if it has no direction."""
+    vector = np.asarray(vector, dtype=np.float64)
+    norm = np.linalg.norm(vector)
+    if norm == 0 or not np.isfinite(norm):
+        return None
+    return vector / norm
+
+
+def mean_embeddings_by_name(
+    records: Iterable[Tuple[str, List[float]]],
+) -> List[Tuple[str, np.ndarray]]:
+    """Build one unit-length template per person from their stored embeddings.
+
+    Each embedding is normalised before averaging so one sample with a large
+    norm cannot dominate the template; malformed rows are skipped.
+    """
+    grouped = defaultdict(list)
+    for name, emb in records:
+        arr = np.asarray(emb, dtype=np.float64)
+        if arr.shape != (EMBEDDING_DIM,):
+            logger.warning("Skipping embedding for %s with shape %s", name, arr.shape)
+            continue
+        unit = l2_normalize(arr)
+        if unit is not None:
+            grouped[name].append(unit)
+
+    templates = []
+    for name, embs in grouped.items():
+        template = l2_normalize(np.mean(embs, axis=0))
+        if template is not None:
+            templates.append((name, template))
+    return templates
+
+
+def decide_match(
+    scores: List[Tuple[str, float]],
+    threshold: float,
+    ambiguity_margin: float = 0.1,
+    ambiguity_penalty: float = 0.1,
+) -> Tuple[str, float]:
+    """Pick the best label from scores sorted best-first, or UNKNOWN.
+
+    If the two best people are within `ambiguity_margin` of each other the
+    match is ambiguous, so the threshold is raised by `ambiguity_penalty`.
+    """
+    if not scores:
+        return UNKNOWN, 0.0
+
+    best_label, best_score = scores[0]
+    effective_threshold = threshold
+    if len(scores) >= 2 and (best_score - scores[1][1]) < ambiguity_margin:
+        effective_threshold = threshold + ambiguity_penalty
+
+    if best_score >= effective_threshold:
+        return best_label, best_score
+    return UNKNOWN, best_score
 
 
 class FaceRecognizer:
-    def __init__(self, embedder, database, threshold=0.6, min_quality=0.5):
+    def __init__(
+        self,
+        embedder,
+        database,
+        threshold=0.6,
+        min_quality=0.5,
+        ambiguity_margin=0.1,
+        ambiguity_penalty=0.1,
+    ):
         self.embedder = embedder
         self.database = database
         self.threshold = threshold
         self.min_quality = min_quality
+        self.ambiguity_margin = ambiguity_margin
+        self.ambiguity_penalty = ambiguity_penalty
 
     def _get_mean_embeddings(self) -> List[Tuple[str, np.ndarray]]:
         """Get mean embeddings for each person with validation."""
-        records = self.database.fetch_all_embeddings()
-        grouped = defaultdict(list)
+        return mean_embeddings_by_name(self.database.fetch_all_embeddings())
 
-        # Group embeddings by name
-        for name, emb in records:
-            if isinstance(emb, list) and len(emb) == 512:
-                grouped[name].append(np.array(emb))
+    def match(
+        self, embedding: np.ndarray
+    ) -> Tuple[str, float, List[Tuple[str, float]]]:
+        """Match an embedding against the enrolled people.
 
-        cleaned = []
-        for name, embs in grouped.items():
-            try:
-                # Convert to numpy array and validate shape
-                arr = np.array(embs)
-                if len(arr.shape) == 2 and arr.shape[1] == 512:
-                    # Calculate mean embedding
-                    mean = np.mean(arr, axis=0)
-                    # Normalize the mean embedding
-                    mean = mean / np.linalg.norm(mean)
-                    cleaned.append((name, mean))
-                else:
-                    logger.warning(f"Invalid embedding shape for {name}: {arr.shape}")
-            except Exception as e:
-                logger.error(f"Error processing embeddings for {name}: {e}")
+        Returns (label, best_score, top_3_scores); label is "Unknown" when no
+        one clears the threshold.
+        """
+        query = l2_normalize(embedding)
+        if query is None:
+            logger.warning("Query embedding has zero or invalid norm")
+            return UNKNOWN, 0.0, []
 
-        return cleaned
+        mean_embeddings = self._get_mean_embeddings()
+        if not mean_embeddings:
+            logger.warning("No valid embeddings in database")
+            return UNKNOWN, 0.0, []
+
+        # Templates and query are unit vectors, so cosine similarity is a dot product
+        scores = [
+            (label, float(np.dot(query, template)))
+            for label, template in mean_embeddings
+        ]
+        scores.sort(key=lambda x: x[1], reverse=True)
+
+        logger.debug("Top similarity scores: %s", scores[:3])
+
+        label, best_score = decide_match(
+            scores, self.threshold, self.ambiguity_margin, self.ambiguity_penalty
+        )
+        return label, best_score, scores[:3]
 
     def recognize(self, face: np.ndarray) -> Tuple[str, float, List[Tuple[str, float]]]:
         """Recognize a face with quality check and smart matching."""
-        # Get embedding with quality check
         embedding, quality = self.embedder.get_embedding(face)
 
         if embedding is None or quality < self.min_quality:
-            logger.warning(f"Face quality too low: {quality:.2f}")
-            return "Unknown", 0.0, []
+            logger.warning("Face quality too low: %.2f", quality)
+            return UNKNOWN, 0.0, []
 
-        # Normalize the embedding
-        embedding = embedding / np.linalg.norm(embedding)
-
-        # Get mean embeddings from database
-        mean_embeddings = self._get_mean_embeddings()
-        if len(mean_embeddings) == 0:
-            logger.warning("No valid embeddings in database")
-            return "Unknown", 0.0, []
-
-        # Calculate similarity scores
-        scores = []
-        for label, stored_emb in mean_embeddings:
-            score = cosine_similarity([embedding], [stored_emb])[0][0]
-            scores.append((label, score))
-
-        # Sort by similarity score
-        scores.sort(key=lambda x: x[1], reverse=True)
-
-        # Smart matching logic
-        if len(scores) >= 2:
-            best_score = scores[0][1]
-            second_best = scores[1][1]
-
-            # If the difference between top 2 scores is small, require higher threshold
-            if (best_score - second_best) < 0.1:
-                effective_threshold = self.threshold + 0.1
-            else:
-                effective_threshold = self.threshold
-        else:
-            effective_threshold = self.threshold
-
-        # Log top matches for debugging
-        logger.info("\n[📊 Similarity Scores]")
-        for label, score in scores[:3]:
-            logger.info(f"  - {label}: {score:.4f}")
-
-        best_label, best_score = scores[0]
-        if best_score >= effective_threshold:
-            return best_label, best_score, scores[:3]
-
-        return "Unknown", best_score, scores[:3]
+        return self.match(embedding)
 
     def add_new_person(self, image: np.ndarray, name: str) -> bool:
         """Add a new person with quality checks."""
-        # Get embedding with quality check
         embedding, quality = self.embedder.get_embedding(image)
 
         if embedding is None or quality < self.min_quality:
-            logger.error(f"Cannot add person - face quality too low: {quality:.2f}")
+            logger.error("Cannot add person - face quality too low: %.2f", quality)
             return False
 
-        try:
-            self.database.insert_embedding(name, embedding.tolist(), None)
-            logger.info(f"Added new person '{name}' to database")
-            return True
-        except Exception as e:
-            logger.error(f"Error adding person to database: {e}")
-            return False
+        added = self.database.insert_embedding(name, embedding.tolist(), None)
+        if added:
+            logger.info("Added new person '%s' to database", name)
+        return added
