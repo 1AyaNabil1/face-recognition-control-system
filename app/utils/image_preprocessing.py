@@ -21,9 +21,9 @@ def preprocess_face_image(
 
     if apply_clahe:
         lab = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
-        l, a, b = cv2.split(lab)
+        lightness, a, b = cv2.split(lab)
         clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
-        cl = clahe.apply(l.astype(np.uint8))
+        cl = clahe.apply(lightness.astype(np.uint8))
         image = cv2.merge((cl, a.astype(np.uint8), b.astype(np.uint8)))
         image = cv2.cvtColor(image, cv2.COLOR_LAB2BGR)
         image = image.astype("float32")

@@ -1,7 +1,7 @@
 import sys
 import os
 import modal
-from flask import Flask, request, jsonify
+from flask import Flask
 
 # Add root directory for imports
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

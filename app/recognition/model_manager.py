@@ -1,16 +1,13 @@
-import os
 import torch
 import torch.nn as nn
 from typing import Dict, Optional, List, Any, Union
 import structlog
 from pathlib import Path
-import asyncio
 from concurrent.futures import ThreadPoolExecutor
 import time
 from datetime import datetime
 from dataclasses import dataclass, asdict
 from facenet_pytorch import MTCNN, InceptionResnetV1
-from insightface.app import FaceAnalysis
 from deepface import DeepFace
 import onnxruntime as ort
 import numpy as np

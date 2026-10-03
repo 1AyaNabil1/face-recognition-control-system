@@ -1,7 +1,6 @@
 import logging
 import logging.handlers
 import json
-import os
 from datetime import datetime
 from pathlib import Path
 import structlog

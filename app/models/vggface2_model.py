@@ -1,7 +1,5 @@
 from keras_vggface.vggface import VGGFace
 from keras_vggface.utils import preprocess_input
-from keras.models import Model
-import numpy as np
 
 
 class VGGFaceModel:

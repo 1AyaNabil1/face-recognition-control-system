@@ -2,7 +2,6 @@ from sqlalchemy import (
     Column,
     String,
     Float,
-    Integer,
     ForeignKey,
     JSON,
     DateTime,
@@ -15,7 +14,6 @@ from datetime import datetime
 import uuid
 from typing import List, Optional
 from pydantic import BaseModel, Field, constr
-import numpy as np
 
 from app.core.database import Base
 

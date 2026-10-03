@@ -7,7 +7,6 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import secrets
 import structlog
 from redis import Redis
-from ratelimit import RateLimitException, RateLimitDecorator
 import hashlib
 import magic
 import os

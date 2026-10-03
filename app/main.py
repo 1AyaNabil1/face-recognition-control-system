@@ -1,19 +1,16 @@
-from fastapi import FastAPI, Request, Response, File, UploadFile, HTTPException
+from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
-from fastapi.responses import JSONResponse
 import sentry_sdk
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from prometheus_client import make_asgi_app
 import uvicorn
 import structlog
-from typing import Dict, Any, List
+from typing import Dict, Any
 import os
-import asyncio
 from datetime import datetime
 import numpy as np
 import cv2
-from pydantic import BaseModel, Field
 import base64
 import time
 

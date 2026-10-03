@@ -4,9 +4,7 @@ from starlette.types import ASGIApp
 import time
 import uuid
 import structlog
-from typing import Callable, Optional
 import sentry_sdk
-from prometheus_client import Counter, Histogram
 from app.core.monitoring import REQUEST_COUNT, REQUEST_LATENCY
 from app.core.security import SecurityError
 import json

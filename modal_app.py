@@ -4,7 +4,6 @@ from fastapi import (
     UploadFile,
     File,
     HTTPException,
-    Form,
     Depends,
     Security,
     Request,
@@ -13,14 +12,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.responses import JSONResponse
-from typing import Optional, List
 import numpy as np
 import cv2
 import base64
 from datetime import datetime
 import uuid
 import logging
-from pathlib import Path
 import time
 from prometheus_client import Counter, Histogram
 import sentry_sdk
@@ -29,6 +26,7 @@ from pydantic import BaseModel, Field
 import redis
 from functools import lru_cache
 import torch
+from dotenv import load_dotenv
 
 # Configure Sentry for error tracking
 sentry_sdk.init(
@@ -177,8 +175,6 @@ image = (
 )
 
 # Load environment variables
-from dotenv import load_dotenv
-
 load_dotenv()
 
 

@@ -20,7 +20,7 @@ def set_modal_secret():
             "ENABLE_CACHING=false",
         ]
 
-        result = subprocess.run(
+        subprocess.run(
             command,
             capture_output=True,
             check=True,

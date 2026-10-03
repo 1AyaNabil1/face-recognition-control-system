@@ -1,7 +1,6 @@
 import modal
 from modal import Image, Secret, Mount, NetworkFileSystem, asgi_app
 from pathlib import Path
-import os
 import structlog
 from app.core.config import settings
 
@@ -128,7 +127,6 @@ def app():
 )
 async def cleanup_models():
     """Daily cleanup of expired model files."""
-    import shutil
     from datetime import datetime, timedelta
 
     models_dir = Path("/root/models")
@@ -166,7 +164,6 @@ async def cleanup_models():
 async def health_check():
     """Hourly health check of the application."""
     import httpx
-    from datetime import datetime
 
     logger.info("Starting health check")
 

@@ -1,14 +1,12 @@
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
 from facenet_pytorch import MTCNN, InceptionResnetV1
 import cv2
 import numpy as np
-from typing import List, Tuple, Optional, Dict, Union
+from typing import List, Tuple, Optional, Dict
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 import structlog
-from pathlib import Path
 import onnxruntime as ort
 from deepface import DeepFace
 import time

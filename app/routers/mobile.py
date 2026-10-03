@@ -10,7 +10,6 @@ import uuid
 
 from app.models.mobile import (
     MobileRecognizeResponse,
-    MobileRegisterRequest,
     MobileRegisterResponse,
     MobileVerifyResponse,
     MobileHealthResponse,
@@ -219,7 +218,7 @@ async def mobile_register(
             )
 
             # Create embedding
-            embedding = await repo.create_face_embedding(
+            await repo.create_face_embedding(
                 FaceEmbeddingCreate(
                     person_id=person.id,
                     embedding=face_data["embedding"],

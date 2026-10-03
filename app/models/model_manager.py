@@ -3,7 +3,6 @@ import logging
 import requests
 from pathlib import Path
 from typing import Dict, Optional
-import torch
 from tqdm import tqdm
 import hashlib
 import json

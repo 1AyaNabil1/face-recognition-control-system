@@ -1,11 +1,10 @@
 from typing import List, Optional, Dict, Tuple
 import uuid
 import numpy as np
-from sqlalchemy import select, and_, func
+from sqlalchemy import select, and_, func, true
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 import structlog
-import time
 from datetime import datetime
 
 from app.models.face_storage import (
@@ -46,7 +45,7 @@ class FaceRepository:
             stmt = (
                 select(Person)
                 .options(selectinload(Person.face_embeddings))
-                .where(and_(Person.id == person_id, Person.is_active == True))
+                .where(and_(Person.id == person_id, Person.is_active.is_(True)))
             )
             result = await self.session.execute(stmt)
             return result.scalar_one_or_none()
@@ -105,7 +104,7 @@ class FaceRepository:
                 .where(
                     and_(
                         FaceEmbedding.person_id == person_id,
-                        FaceEmbedding.is_active == True if active_only else True,
+                        FaceEmbedding.is_active.is_(True) if active_only else true(),
                     )
                 )
                 .order_by(FaceEmbedding.created_at.desc())
@@ -134,7 +133,7 @@ class FaceRepository:
             query_embedding = np.array(embedding)
 
             # Get all active embeddings
-            stmt = select(FaceEmbedding).where(FaceEmbedding.is_active == True)
+            stmt = select(FaceEmbedding).where(FaceEmbedding.is_active.is_(True))
             result = await self.session.execute(stmt)
             embeddings = result.scalars().all()
 
@@ -190,19 +189,21 @@ class FaceRepository:
 
             # Active embeddings
             active_stmt = select(func.count(FaceEmbedding.id)).where(
-                FaceEmbedding.is_active == True
+                FaceEmbedding.is_active.is_(True)
             )
             active_result = await self.session.execute(active_stmt)
             active_embeddings = active_result.scalar()
 
             # Total persons
-            persons_stmt = select(func.count(Person.id)).where(Person.is_active == True)
+            persons_stmt = select(func.count(Person.id)).where(
+                Person.is_active.is_(True)
+            )
             persons_result = await self.session.execute(persons_stmt)
             total_persons = persons_result.scalar()
 
             # Average quality score
             quality_stmt = select(func.avg(FaceEmbedding.quality_score)).where(
-                FaceEmbedding.is_active == True
+                FaceEmbedding.is_active.is_(True)
             )
             quality_result = await self.session.execute(quality_stmt)
             avg_quality = quality_result.scalar() or 0.0

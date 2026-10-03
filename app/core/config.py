@@ -1,7 +1,6 @@
 from pydantic_settings import BaseSettings
 from typing import List, Dict, Any, Optional
 from pathlib import Path
-import os
 import json
 import structlog
 from functools import lru_cache

@@ -1,6 +1,5 @@
 from redis import asyncio as aioredis
 import os
-import json
 import pickle
 import structlog
 from typing import Any, Optional, Union
