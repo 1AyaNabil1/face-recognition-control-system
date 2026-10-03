@@ -1,13 +1,14 @@
 venv/
+.venv/
 *.pyc
 __pycache__/
+.pytest_cache/
+.ruff_cache/
 *.db
 *.log
 dataset/
 debug_crops/
 logs/
-scripts/
-tests/
 
 # Secrets: never commit these
 .env
