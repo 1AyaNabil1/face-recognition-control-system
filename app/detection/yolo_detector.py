@@ -1,11 +1,22 @@
-from ultralytics import YOLO
-import cv2
-import os
-import numpy as np
-from typing import List, Tuple, Optional
 import logging
+import os
+from typing import List, Tuple
+
+import cv2
+import numpy as np
 
 logger = logging.getLogger(__name__)
+
+Box = Tuple[int, int, int, int]
+
+
+def expand_box(box: Box, image_shape: Tuple[int, ...], margin: float = 0.3) -> Box:
+    """Grow a (x1, y1, x2, y2) box by `margin` of its size, clipped to the image."""
+    x1, y1, x2, y2 = box
+    h, w = image_shape[:2]
+    dx = int((x2 - x1) * margin)
+    dy = int((y2 - y1) * margin)
+    return (max(0, x1 - dx), max(0, y1 - dy), min(w, x2 + dx), min(h, y2 + dy))
 
 
 class YOLOFaceDetector:
@@ -15,21 +26,30 @@ class YOLOFaceDetector:
         confidence=0.35,  # Increased default confidence
         iou_threshold=0.5,
         min_face_size=30,
+        model=None,
     ):
-        if not os.path.exists(model_path):
-            raise FileNotFoundError(f"YOLO model not found at {model_path}")
+        if model is None:
+            if not os.path.exists(model_path):
+                raise FileNotFoundError(f"YOLO model not found at {model_path}")
+            # Imported lazily so the module works without ultralytics installed.
+            from ultralytics import YOLO
 
-        self.model = YOLO(model_path)
+            model = YOLO(model_path)
+
+        self.model = model
         self.confidence = confidence
         self.iou_threshold = iou_threshold
         self.min_face_size = min_face_size
-        self.fallback_cascade = cv2.CascadeClassifier(
-            cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
-        )
+        self.fallback_cascade = None
+        if hasattr(cv2, "CascadeClassifier"):
+            self.fallback_cascade = cv2.CascadeClassifier(
+                cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
+            )
+        else:
+            # OpenCV 5 dropped the Haar cascade API from the main package
+            logger.warning("cv2.CascadeClassifier unavailable; Haar fallback disabled")
 
-    def _validate_face_box(
-        self, box: Tuple[int, int, int, int], image_shape: Tuple[int, int]
-    ) -> bool:
+    def _validate_face_box(self, box: Box, image_shape: Tuple[int, ...]) -> bool:
         """Validate face bounding box dimensions and position."""
         x1, y1, x2, y2 = box
         h, w = image_shape[:2]
@@ -50,7 +70,7 @@ class YOLOFaceDetector:
 
         return True
 
-    def detect_faces(self, frame: np.ndarray) -> List[Tuple[int, int, int, int]]:
+    def detect_faces(self, frame: np.ndarray) -> List[Box]:
         """Detect faces with validation and smart fallback."""
         if frame is None or frame.size == 0:
             logger.warning("Invalid input frame")
@@ -72,7 +92,7 @@ class YOLOFaceDetector:
                             boxes.append((x1, y1, x2, y2))
 
         # Smart fallback to Haar Cascade
-        if not boxes:
+        if not boxes and self.fallback_cascade is not None:
             logger.info("YOLO detection failed, trying Haar Cascade")
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             faces = self.fallback_cascade.detectMultiScale(
@@ -83,7 +103,8 @@ class YOLOFaceDetector:
             )
 
             for x, y, w, h in faces:
-                box = (x, y, x + w, y + h)
+                # Cast numpy ints to plain ints so boxes are JSON-serialisable
+                box = (int(x), int(y), int(x + w), int(y + h))
                 if self._validate_face_box(box, frame.shape):
                     boxes.append(box)
 
@@ -92,7 +113,7 @@ class YOLOFaceDetector:
     def draw_boxes(
         self,
         frame: np.ndarray,
-        boxes: List[Tuple[int, int, int, int]],
+        boxes: List[Box],
         color=(0, 255, 0),
     ) -> np.ndarray:
         """Draw face boxes with optional labels."""
