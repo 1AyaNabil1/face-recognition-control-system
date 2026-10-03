@@ -1,11 +1,13 @@
-import sqlite3
-import json
 import csv
-import os
-from datetime import datetime
-import numpy as np
-from typing import List, Tuple, Optional
+import json
 import logging
+import os
+import sqlite3
+from contextlib import closing
+from datetime import datetime
+from typing import List, Optional, Tuple
+
+import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -21,8 +23,15 @@ class EmbeddingDatabase:
 
     def _ensure_directories(self):
         """Ensure required directories exist."""
-        os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
-        os.makedirs(os.path.dirname(self.log_path), exist_ok=True)
+        for path in (self.db_path, self.log_path):
+            directory = os.path.dirname(path)
+            # A bare file name lives in the working directory; makedirs("") fails
+            if directory:
+                os.makedirs(directory, exist_ok=True)
+
+    def _connect(self):
+        """Open a connection that is closed (not just committed) on exit."""
+        return closing(sqlite3.connect(self.db_path))
 
     def _validate_embedding(self, embedding: List[float]) -> bool:
         """Validate embedding format and values."""
@@ -48,7 +57,7 @@ class EmbeddingDatabase:
 
     def initialize(self):
         """Initialize database with proper schema."""
-        with sqlite3.connect(self.db_path) as conn:
+        with self._connect() as conn:
             c = conn.cursor()
 
             # Create embeddings table with constraints
@@ -87,7 +96,7 @@ class EmbeddingDatabase:
 
         try:
             emb_str = json.dumps(embedding)
-            with sqlite3.connect(self.db_path) as conn:
+            with self._connect() as conn:
                 c = conn.cursor()
                 c.execute(
                     """
@@ -106,7 +115,7 @@ class EmbeddingDatabase:
     def fetch_all_embeddings(self) -> List[Tuple[str, List[float]]]:
         """Fetch all embeddings with validation."""
         try:
-            with sqlite3.connect(self.db_path) as conn:
+            with self._connect() as conn:
                 c = conn.cursor()
                 c.execute("SELECT name, embedding FROM embeddings")
                 rows = c.fetchall()
@@ -127,10 +136,32 @@ class EmbeddingDatabase:
             logger.error(f"Error fetching embeddings: {e}")
             return []
 
+    def list_people(self) -> List[Tuple[str, int]]:
+        """Return (name, number of stored embeddings) for every enrolled person."""
+        with self._connect() as conn:
+            rows = conn.execute(
+                "SELECT name, COUNT(*) FROM embeddings GROUP BY name ORDER BY name"
+            ).fetchall()
+        return [(name, int(count)) for name, count in rows]
+
+    def delete_person(self, name: str) -> int:
+        """Delete every embedding stored for `name`; returns how many were removed.
+
+        Embeddings are biometric data, so this is the erasure path when a
+        person withdraws consent.
+        """
+        with self._connect() as conn:
+            cursor = conn.execute("DELETE FROM embeddings WHERE name = ?", (name,))
+            conn.commit()
+            deleted = cursor.rowcount
+        if deleted:
+            logger.info("Deleted %d embedding(s) for %s", deleted, name)
+        return deleted
+
     def update_usage_stats(self, name: str):
         """Update usage statistics for recognized faces."""
         try:
-            with sqlite3.connect(self.db_path) as conn:
+            with self._connect() as conn:
                 c = conn.cursor()
                 c.execute(
                     """
@@ -148,7 +179,7 @@ class EmbeddingDatabase:
     def cleanup_invalid_entries(self) -> int:
         """Remove invalid entries from database."""
         try:
-            with sqlite3.connect(self.db_path) as conn:
+            with self._connect() as conn:
                 c = conn.cursor()
                 c.execute("SELECT id, name, embedding FROM embeddings")
                 rows = c.fetchall()
