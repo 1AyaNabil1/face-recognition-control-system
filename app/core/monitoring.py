@@ -1,4 +1,5 @@
 from prometheus_client import Counter, Histogram, Gauge, Info
+import platform
 import time
 from typing import Callable
 from functools import wraps

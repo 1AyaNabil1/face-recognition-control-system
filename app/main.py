@@ -53,17 +53,6 @@ model_manager: ModelManager = None
 face_engine: ProductionFaceRecognitionEngine = None
 
 
-# API Models
-class RegisterRequest(BaseModel):
-    name: str = Field(..., description="Name of the person to register")
-    images: List[str] = Field(..., description="Base64 encoded face images")
-
-
-class VerifyRequest(BaseModel):
-    name: str = Field(..., description="Name of the person to verify against")
-    image: str = Field(..., description="Base64 encoded face image to verify")
-
-
 def create_app() -> FastAPI:
     """Create and configure the FastAPI application."""
 
