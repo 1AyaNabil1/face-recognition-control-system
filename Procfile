@@ -1,1 +1,1 @@
-web: gunicorn -w 4 -b 0.0.0.0:$PORT api.app:app
+web: gunicorn --workers ${WEB_CONCURRENCY:-2} --timeout 120 --bind 0.0.0.0:$PORT "api.app:create_app()"
