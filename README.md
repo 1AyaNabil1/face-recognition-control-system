@@ -250,8 +250,6 @@ metrics) are available in the working service.
 | --- | --- | --- |
 | `app/models/yolo/yolov8n-face-lindevs.pt` | yes | [lindevs/yolov8-face](https://github.com/lindevs/yolov8-face) release 1.0.1 (repository MIT-licensed); trained with Ultralytics YOLOv8, which is AGPL-3.0 |
 | InsightFace `buffalo_l` (downloaded at runtime) | yes | [deepinsight/insightface](https://github.com/deepinsight/insightface); its pretrained models are released for non-commercial research use only |
-| `app/models/yolo/yolov8n.pt` | no | Ultralytics YOLOv8n COCO weights (AGPL-3.0) |
-| `app/utils/shape_predictor_68_face_landmarks.dat` (95 MB) | no | dlib 68-point landmark model, trained on iBUG 300-W, whose license excludes commercial use |
 
 Check these licenses before any commercial use.
 
