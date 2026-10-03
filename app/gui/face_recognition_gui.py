@@ -1,11 +1,10 @@
 import tkinter as tk
 from tkinter import filedialog, messagebox, simpledialog, ttk
-from PIL import Image, ImageTk
-import os
-import cv2
-import numpy as np
 
-from app.database.db_manager import EmbeddingDatabase
+import cv2
+from PIL import Image, ImageTk
+
+from app.settings import load_dotenv_if_available
 
 
 class FaceRecognitionGUI:
@@ -17,11 +16,8 @@ class FaceRecognitionGUI:
 
         self.smart_match = tk.BooleanVar(value=True)
 
-        self.db = None
-        self.detector = None
-        self.yolo = None
-        self.embedder = None
-        self.recognizer = None
+        # Loaded on first use so the window opens immediately
+        self.service = None
 
         self.image_path = None
         self.tk_image = None
@@ -34,18 +30,13 @@ class FaceRecognitionGUI:
         tk.Label(loading, text="Loading models...").pack(padx=20, pady=20)
         self.root.update()
 
-        from app.detection.face_detector import FaceDetector
-        from app.detection.yolo_detector import YOLOFaceDetector
-        from app.embedding.face_embedder import FaceEmbedder
-        from app.recognition.face_recognizer import FaceRecognizer
+        # Same pipeline as the HTTP API, so GUI and API enrollments are compatible
+        from api.recognition_service import RecognitionService
 
-        self.db = EmbeddingDatabase()
-        self.detector = FaceDetector()
-        self.yolo = YOLOFaceDetector(confidence=0.2)
-        self.embedder = FaceEmbedder()
-        self.recognizer = FaceRecognizer(embedder=self.embedder, database=self.db)
-
-        self.root.after(100, loading.destroy)
+        try:
+            self.service = RecognitionService.from_settings()
+        finally:
+            self.root.after(100, loading.destroy)
 
     def _setup_ui(self):
         frame = ttk.Frame(self.root, padding=10)
@@ -90,29 +81,35 @@ class FaceRecognitionGUI:
             self.top_matches_label.configure(text="")
 
     def recognize(self):
-        if self.recognizer is None:
-            self._lazy_init()
-
         if not self.image_path:
             messagebox.showerror("Error", "Please upload an image first.")
             return
 
+        if self.service is None:
+            self._lazy_init()
+
         original_img = cv2.imread(self.image_path)
-        face = self.detector.extract_face(original_img)
-        if face is None:
+        if original_img is None:
+            messagebox.showerror("Error", "Could not read the selected image.")
+            return
+
+        # The checkbox toggles the top-2 margin rule in FaceRecognizer
+        self.service.recognizer.ambiguity_penalty = (
+            0.1 if self.smart_match.get() else 0.0
+        )
+
+        result = self.service.recognize_image(original_img)
+        if result.faces_detected == 0:
             self.result_label.configure(text="No face detected.", foreground="red")
             return
 
-        boxes = self.yolo.detect_faces(original_img)
-        boxed_img = self.yolo.draw_boxes(original_img.copy(), boxes)
-
-        rgb = cv2.cvtColor(boxed_img, cv2.COLOR_BGR2RGB)
+        rgb = cv2.cvtColor(result.annotated_image, cv2.COLOR_BGR2RGB)
         pil_img = Image.fromarray(rgb)
         pil_img.thumbnail((300, 300))
         self.tk_image = ImageTk.PhotoImage(pil_img)
         self.image_label.configure(image=self.tk_image)
 
-        name, score, top_scores = self.recognizer.recognize(face)
+        name, score, top_scores = result.name, result.score, result.top_matches
 
         if name == "Unknown":
             self.result_label.configure(
@@ -129,8 +126,6 @@ class FaceRecognitionGUI:
             top_matches_text += f"• {label}: {round(s, 4)}\n"
         self.top_matches_label.configure(text=top_matches_text)
 
-        self.db.log_recognition_event(name)
-
     def reset_ui(self):
         self.image_label.configure(image="")
         self.image_path = None
@@ -138,24 +133,33 @@ class FaceRecognitionGUI:
         self.top_matches_label.configure(text="")
 
     def add_new_person(self):
-        if self.recognizer is None:
-            self._lazy_init()
+        from api.utils import normalize_person_name
 
         name = simpledialog.askstring("Add Person", "Enter name:")
         if not name:
+            return
+        try:
+            name = normalize_person_name(name)
+        except ValueError as exc:
+            messagebox.showerror("Error", str(exc))
             return
 
         file_path = filedialog.askopenfilename()
         if not file_path:
             return
 
-        face = self.detector.extract_face(file_path)
-        if face is None:
-            messagebox.showerror("Error", "No face detected in the image.")
+        image = cv2.imread(file_path)
+        if image is None:
+            messagebox.showerror("Error", "Could not read the selected image.")
             return
 
-        embedding = self.embedder.get_embedding(face)
-        self.db.insert_embedding(name, embedding.tolist(), file_path)
+        if self.service is None:
+            self._lazy_init()
+
+        result = self.service.enroll(image, name, image_path=file_path)
+        if not result.success:
+            messagebox.showerror("Error", f"Could not add {name}: {result.reason}")
+            return
         messagebox.showinfo("Success", f"{name} has been added to the database!")
 
     def run(self):
@@ -163,5 +167,6 @@ class FaceRecognitionGUI:
 
 
 if __name__ == "__main__":
+    load_dotenv_if_available()
     app = FaceRecognitionGUI()
     app.run()
