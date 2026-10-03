@@ -1,9 +1,6 @@
 from collections import defaultdict
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
-from app.detection.face_detector import extract_face
-from models.vggface2_model import get_embedding
-from app.database.db_manager import insert_embedding
 from typing import List, Tuple, Optional
 import logging
 
