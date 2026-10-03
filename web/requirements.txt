@@ -1,0 +1,3 @@
+# Streamlit front-end (web/app.py); it talks to the Flask API over HTTP.
+streamlit>=1.30
+requests>=2.31
