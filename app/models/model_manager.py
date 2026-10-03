@@ -18,7 +18,7 @@ class ModelManager:
     """
 
     MODEL_URLS = {
-        "yolov8-face": "https://github.com/derronqi/yolov8-face/releases/download/v1.0/yolov8n-face-lindevs.pt",
+        "yolov8-face": "https://github.com/lindevs/yolov8-face/releases/download/1.0.1/yolov8n-face-lindevs.pt",
         "antispoofing": "https://example.com/antispoofing.onnx",  # Replace with actual URL
         "facenet": "https://example.com/facenet.pt",  # Replace with actual URL
         "age-gender": "https://example.com/age-gender.h5",  # Replace with actual URL

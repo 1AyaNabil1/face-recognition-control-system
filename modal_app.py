@@ -171,7 +171,7 @@ image = (
     .run_commands(
         [
             "mkdir -p /app/models/yolo",
-            "wget https://github.com/derronqi/yolov8-face/releases/download/v1.0/yolov8n-face-lindevs.pt -O /app/models/yolo/yolov8n-face-lindevs.pt",
+            "wget https://github.com/lindevs/yolov8-face/releases/download/1.0.1/yolov8n-face-lindevs.pt -O /app/models/yolo/yolov8n-face-lindevs.pt",
         ]
     )
 )
